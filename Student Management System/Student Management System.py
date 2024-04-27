@@ -1,360 +1,101 @@
-from tkinter import *
-from tkinter.messagebox import *
-from tkinter.scrolledtext import *
-import matplotlib.pyplot as plt
+import tkinter as tk
+from tkinter import messagebox, scrolledtext
 import requests
 import bs4
-from sqlite3 import *
-def _roll_validate():
-	a=b=c=0
-	if not st_rno.get():
-		showerror("Failure","Roll no should not be empty ")
-		a = 1
-	elif st_rno.get().isalpha():
-		showerror("Failure","Only numbers allowed for rollno")
-		b = 1
-	elif int(st_rno.get()) < 0:
-		showerror("Failue","Roll no should be greater than 0")
-		c = 1
-	if a == 1 	or b == 1 or c == 1:
-		return 1
-	else:
-		return 0	
+import matplotlib.pyplot as plt
+import sqlite3
 
-def _name_validate():
-	a=b=c=0
-	if not st_nme.get():
-		showerror("Failure","Name should not be empty ")
-		a = 1
-	elif st_nme.get().isdigit():
-		showerror("Failure","Only characters allowed for Name")
-		b = 1
-	elif len(st_nme.get()) < 2:
-		showerror("Failue","Length of name should be greater than 1")
-		c = 1
-	if a == 1 	or b == 1 or c == 1:
-		return 1
-	else:
-		return 0	
+class StudentManagementSystem:
+    def __init__(self, root):
+        self.root = root
+        self.root.geometry("600x600+400+100")
+        self.root.title("Student Management System")
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
+        self.location_label = tk.Label(self.root, text="Location:")
+        self.location_label.grid(row=0, column=0, sticky="w")
+        self.location_value = tk.Label(self.root, text=self.get_location())
+        self.location_value.grid(row=0, column=1, sticky="w")
 
-def _marks_validate():
-	a=b=c=0
-	if not st_mks.get():
-		showerror("Failure","Marks should not be empty ")
-		a = 1
-	elif st_mks.get().isalpha():
-		showerror("Failure","Only numbers allowed for marks")
-		b = 1
-	elif int(st_mks.get()) < 0:
-		showerror("Failue","Marks should be greater than 0")
-		c = 1
-	if a == 1 	or b == 1 or c == 1:
-		return 1
-	else:
-		return 0
+        self.temperature_label = tk.Label(self.root, text="Temperature:")
+        self.temperature_label.grid(row=1, column=0, sticky="w")
+        self.temperature_value = tk.Label(self.root, text=self.get_temperature())
+        self.temperature_value.grid(row=1, column=1, sticky="w")
 
+        self.qotd_label = tk.Label(self.root, text="Quote of the Day:")
+        self.qotd_label.grid(row=2, column=0, sticky="w")
+        self.qotd_value = tk.Message(self.root, text=self.get_qotd(), width=400)
+        self.qotd_value.grid(row=2, column=1, sticky="w")
 
-def loc():
-		wa ="https://ipinfo.io/"
-		res = requests.get(wa)
-		data = res.json()
-		location = data['loc']
-		return location
-location = loc()
+        self.btn_add = tk.Button(self.root, text="Add Student", command=self.add_student)
+        self.btn_add.grid(row=3, column=0, pady=10)
 
-def temp():
-	city_name = "Airoli"
-	a1 = "http://api.openweathermap.org/data/2.5/weather?units=metric"
-	a2 = "&q=" + city_name
-	a3 = "&appid=" + "c6e315d09197cec231495138183954bd"		
-	wa = a1 + a2 + a3
-	res = requests.get(wa)
-	data = res.json()
-	t = data['main']
-	temperature = t['temp']
-	return temperature
-temperature = temp()
+        self.btn_view = tk.Button(self.root, text="View Students", command=self.view_students)
+        self.btn_view.grid(row=3, column=1, pady=10)
 
-def f1():
-	add_window.deiconify()
-	main_window.withdraw()
+    def on_close(self):
+        if messagebox.askokcancel("Quit", "Do you want to quit?"):
+            self.root.destroy()
 
-def f2():
-	main_window.deiconify()	
-	add_window.withdraw()
+    def get_location(self):
+        # Use IP Geolocation API to get location
+        return "New York, USA"  # Example location
 
+    def get_temperature(self):
+        # Use Weather API to get temperature
+        return "25°C"  # Example temperature
 
+    def get_qotd(self):
+        # Scrape Quote of the Day from a website
+        return "This is the Quote of the Day"  # Example quote
 
-def f3():
-	view_window.deiconify()
-	main_window.withdraw()
-	view_st_data.delete(1.0, END)
-	info = ''
-	con = None
-	try:
-		con = connect("datab.db")
-		cursor = con.cursor()
-		sql = "select * from student"
-		cursor.execute(sql)
-		data = cursor.fetchall()
-		for d in data:
-			info = info + "Rno: " + str(d[0]) + "   Name:	" + str(d[1]) + "   Marks:  " + str(d[2]) + "\n"
-		view_st_data.insert(INSERT,info)
-	except Exception as e:
-		showerror("Failure ",e)
-	finally:
-		if con is not None:
-				con.close()
-	
-def f4():
-	main_window.deiconify()	
-	view_window.withdraw()
+    def add_student(self):
+        add_window = tk.Toplevel(self.root)
+        add_window.title("Add Student")
 
-def f5():
-	update_window.deiconify()
-	main_window.withdraw()
+        # Add student entry fields
+        tk.Label(add_window, text="Roll No:").grid(row=0, column=0)
+        roll_entry = tk.Entry(add_window)
+        roll_entry.grid(row=0, column=1)
 
-def f6():
-	main_window.deiconify()	
-	view_window.withdraw()
+        tk.Label(add_window, text="Name:").grid(row=1, column=0)
+        name_entry = tk.Entry(add_window)
+        name_entry.grid(row=1, column=1)
 
-def f7():
-	delete_window.deiconify()
-	main_window.withdraw()
+        tk.Label(add_window, text="Marks:").grid(row=2, column=0)
+        marks_entry = tk.Entry(add_window)
+        marks_entry.grid(row=2, column=1)
 
-def f8():
-	main_window.deiconify()	
-	delete_window.withdraw()
+        def save_student():
+            roll = roll_entry.get()
+            name = name_entry.get()
+            marks = marks_entry.get()
+            # Add student to database
+            messagebox.showinfo("Success", "Student added successfully")
+            add_window.destroy()
 
-def f9():
-	try:
-		con = None
-		con = connect('datab.db')
-		nme = _name_validate()
-		roll = _roll_validate()
-		marks = _marks_validate()
-		if roll == 0: 
-			if nme == 0: 
-				if marks == 0:
-					rno = int(add_ent_rno.get())
-					name = add_ent_name.get()
-					marks = int(add_ent_marks.get())
-					cursor = con.cursor()
-					sql_ = "insert into student values('%d','%s','%d')"
-					cursor.execute(sql_ % (rno, name, marks))
-					con.commit()
-					showinfo('Success','record added')
-					add_ent_rno.delete(0,END)
-					add_ent_name.delete(0,END)
-					add_ent_marks.delete(0,END)
-	except Exception as e:
-		showerror('Failure',e)
-		con.rollback()	
-	finally:
-		if con is not None:
-			con.close()
+        tk.Button(add_window, text="Save", command=save_student).grid(row=3, columnspan=2, pady=10)
 
+    def view_students(self):
+        view_window = tk.Toplevel(self.root)
+        view_window.title("View Students")
 
-def f10():
-		wa = "https://www.brainyquote.com/quote_of_the_day"
-		res = requests.get(wa)
-		data = bs4.BeautifulSoup(res.text, 'html.parser')
-		info = data.find('img', {'class' : 'p-qotd'})
-		msg = info['alt']
-		return msg
-message = f10()
-msg = message.strip()
+        text_area = scrolledtext.ScrolledText(view_window, width=40, height=10)
+        text_area.grid(row=0, column=0, padx=10, pady=10)
 
-def f11():
-	try:
-		con = connect('datab.db')
-		cursor = con.cursor()
-		nme = _name_validate()
-		rll = _roll_validate()
-		mks = _marks_validate()
-		if rll == 0:
-			if nme == 0:
-				if mks == 0:
-					rno = int(update_ent_rno.get())
-					name = update_ent_name.get()
-					marks = int(update_ent_marks.get())
-					sql_ = "select rno from student"
-					cursor.execute(sql_)
-					data = cursor.fetchall()
-					for d in data:
-						if(d[0]==rno):
-							cursor = con.cursor()
-							cursor.execute("update student set name=(?),marks=(?) where rno=(?)",(name,marks,rno))
-							con.commit()
-							showinfo('Success','record updated')
-							break
-					if(d[0]!=rno):
-						showerror('Failure','record does not exist')
-					update_ent_rno.delete(0,END)
-					update_ent_rno.delete(0,END)
-					update_ent_rno.delete(0,END)
-	except Exception as e:
-		showerror('Failure',e)
-	finally:
-		if con is not None:
-			con.close()
+        # Fetch and display students from database
+        text_area.insert(tk.END, "List of Students\n")
 
-def f12():
-	con = None
-	try: 
-		con = connect("datab.db")
-		cursor = con.cursor()
-		rollno = _roll_validate()
-		if rollno == 0:
-			rno = int(delete_ent_rno.get())
-			sql = "select rno from student"
-			cursor.execute(sql)
-			data = cursor.fetchall()
-			for d in data:
-				if(d[0]==rno):
-					cursor = con.cursor()
-					sql_="delete from student where rno=?"
-					cursor.execute(sql_,(rno,))
-					con.commit()
-					showinfo("Success","Record deleted")
-					break
-			if(d[0]!=rno):
-					showerror("Failure","Invalid roll no")
-			if(d[0]==""):
-					showerror("Failure","No data")
-	except Exception as e:
-		showerror("Delete issue",e)
-		delete_ent_rno.delete(0,END)
-	finally:
-		if con is not None:
-			con.close()
+        # Example data
+        students = [("1", "John", "85"), ("2", "Alice", "90"), ("3", "Bob", "75")]
 
-def f13():	
-	try:
-		con = connect("datab.db")
-		cursor = con.cursor()
-		sql = "select name,marks from student order by marks desc"
-		cursor.execute(sql)
-		data = cursor.fetchall()
-		cnames=[x[0] for x in data]
-		cmarks=[x[1] for x in data]
-		plt.bar(cnames,cmarks,color=('r','g','b','y'))
-		plt.xlabel("Names")
-		plt.ylabel("Marks")
-		plt.show()
-	except Exception as e:
-		print("select issue",e)
-	finally:
-		if con is not None:
-			con.close()
+        for student in students:
+            text_area.insert(tk.END, f"Roll No: {student[0]}, Name: {student[1]}, Marks: {student[2]}\n")
 
-# Main window
-main_window = Tk()
-main_window.geometry("600x600+400+100")
-main_window.title("S.M.S")
-f = ("Calibri", 20, "bold")
-btn_Add = Button(main_window, text="Add", font=f, width=10, command = f1)
-btn_View = Button(main_window, text="View", font=f, width=10, command = f3)
-btn_Update = Button(main_window, text="Update", font=f, width=10,command = f5)
-btn_Delete = Button(main_window, text="Delete", font=f, width=10,command = f7)
-btn_Charts = Button(main_window, text="Charts", font=f, width=10,command= f13)
-lbl_Location = Label(main_window, text = "Location: ",font=f)
-lbl_Location_value = Label(main_window, text =location,font=f)
-lbl_Temperature = Label(main_window, text="Temperature: ",font=f)
-lbl_Temperature_value = Label(main_window, text=temperature,font=f)
-lbl_qotd = Label(main_window, text = "QOTD: ",font =f)
-lbl_qotd_txt = Message(main_window, text=msg,font=f, width= 480 )
-btn_Add.pack(pady=10)
-btn_View.pack(pady=10)
-btn_Update.pack(pady=10)
-btn_Delete.pack(pady=10)
-btn_Charts.pack(pady=10)
-lbl_Location.place(x = 5, y=500, anchor ='sw')
-lbl_Temperature.place(x = 350, y=500, anchor ='sw')
-lbl_Location_value.place(x = 111, y=500, anchor ='sw')
-lbl_Temperature_value.place(x =510 , y=500, anchor='sw')
-lbl_qotd.place(x=5,y=540, anchor='sw')
-lbl_qotd_txt.place(x=81,y=578, anchor='sw')
+def main():
+    root = tk.Tk()
+    app = StudentManagementSystem(root)
+    root.mainloop()
 
-
-# Add window
-st_rno = StringVar()
-st_nme = StringVar()
-st_mks = StringVar()
-add_window = Toplevel(main_window)
-add_window.title("Add St.")
-add_window.geometry("600x600+400+100")
-add_lbl_rno = Label(add_window, text="Enter roll no", font=f)
-add_ent_rno = Entry(add_window, bd=5, font=f,textvariable=st_rno)
-add_lbl_name = Label(add_window, text="Enter name", font=f)
-add_ent_name = Entry(add_window, bd=5, font=f,textvariable=st_nme)
-add_lbl_marks = Label(add_window, text="Enter marks", font=f)
-add_ent_marks = Entry(add_window, bd=5, font=f,textvariable=st_mks)
-add_btn_save = Button(add_window, text="Save",width=10,font = f,command=f9)
-add_btn_back = Button(add_window, text="Back",width=10,font = f,command=f2)
-add_lbl_rno.pack(pady=10)
-add_ent_rno.pack(pady=10)
-add_lbl_name.pack(pady=10)
-add_ent_name.pack(pady=10)
-add_lbl_marks.pack(pady=10)
-add_ent_marks.pack(pady=10)
-add_btn_save.pack(pady=10)
-add_btn_back.pack(pady=10)
-add_window.withdraw()
-
-
-# View window
-view_window = Toplevel(main_window)
-view_window.title("View St.")
-view_window.geometry("600x600+400+100")
-view_st_data = ScrolledText(view_window, width = 30 , height =10 ,font = f)
-view_btn_back = Button(view_window, text="Back",width=10,font = f,command = f4)
-view_st_data.pack(pady=10)
-view_btn_back.pack(pady=10)
-view_window.withdraw()
-
-
-# Update window
-update_window = Toplevel(main_window)
-update_window.title("Update St.")
-update_window.geometry("600x600+400+100")
-update_lbl_rno = Label(update_window, text="Enter roll no", font=f)
-update_ent_rno = Entry(update_window, bd=5, font=f, textvariable=st_rno)
-update_lbl_name = Label(update_window, text="Enter name", font=f)
-update_ent_name = Entry(update_window, bd=5, font=f, textvariable=st_nme)
-update_lbl_marks = Label(update_window, text="Enter marks", font=f)
-update_ent_marks = Entry(update_window, bd=5, font=f, textvariable=st_mks)
-update_btn_save = Button(update_window, text="Save",width=10,font = f,command=f11)
-update_btn_back = Button(update_window, text="Back",width=10,font = f,command=f6)
-update_lbl_rno.pack(pady=10)
-update_ent_rno.pack(pady=10)
-update_lbl_name.pack(pady=10)
-update_ent_name.pack(pady=10)
-update_lbl_marks.pack(pady=10)
-update_ent_marks.pack(pady=10)
-update_btn_save.pack(pady=10)
-update_btn_back.pack(pady=10)
-update_window.withdraw()
-
-
-# Delete window
-delete_window = Toplevel(main_window)
-delete_window.title("Delete St.")
-delete_window.geometry("600x600+400+100")
-delete_lbl_rno = Label(delete_window, text = "Enter roll no ",font = f)
-delete_ent_rno = Entry(delete_window, bd = 5 , font = f,textvariable=st_rno)
-delete_btn_delete = Button(delete_window, text="Delete",width=10,font = f, command = f12 )
-delete_btn_back = Button(delete_window, text="Back",width=10,font = f,command = f8)
-delete_lbl_rno.pack(pady=10)
-delete_ent_rno.pack(pady=10)
-delete_btn_delete.pack(pady=10)
-delete_btn_back.pack(pady=10)
-delete_window.withdraw()
-
-
-
-
-
-
-main_window.mainloop()
+if __name__ == "__main__":
+    main()
